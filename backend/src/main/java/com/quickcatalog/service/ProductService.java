@@ -1,5 +1,10 @@
 package com.quickcatalog.service;
 
+import com.quickcatalog.channel.dto.ListingSummaryResponse;
+import com.quickcatalog.channel.entity.Channel;
+import com.quickcatalog.channel.entity.ProductChannelListing;
+import com.quickcatalog.channel.repository.ChannelRepository;
+import com.quickcatalog.channel.repository.ProductChannelListingRepository;
 import com.quickcatalog.config.TenantContext;
 import com.quickcatalog.dto.common.PagedResponse;
 import com.quickcatalog.dto.image.ImageUploadResponse;
@@ -42,6 +47,8 @@ public class ProductService {
     private final CategoryRepository categoryRepository;
     private final ProductImageRepository productImageRepository;
     private final ProductVariantRepository productVariantRepository;
+    private final ProductChannelListingRepository channelListingRepository;
+    private final ChannelRepository channelRepository;
     private final ActivityLogService activityLogService;
 
     public PagedResponse<ProductListResponse> list(UUID categoryId, String status, String sort, int page, int size) {
@@ -500,6 +507,24 @@ public class ProductService {
                     .collect(Collectors.toList());
         }
 
+        List<ListingSummaryResponse> listingSummaries = Collections.emptyList();
+        List<ProductChannelListing> listings = channelListingRepository
+                .findByProductIdAndTenantId(product.getId(), product.getTenantId());
+        if (listings != null && !listings.isEmpty()) {
+            listingSummaries = listings.stream()
+                    .map(listing -> {
+                        Channel ch = channelRepository.findById(listing.getChannelId()).orElse(null);
+                        return ListingSummaryResponse.builder()
+                                .channelId(listing.getChannelId())
+                                .channelName(ch != null ? ch.getChannelName() : null)
+                                .channelType(ch != null ? ch.getChannelType() : null)
+                                .listingStatus(listing.getListingStatus())
+                                .channelPrice(listing.getChannelPrice())
+                                .build();
+                    })
+                    .collect(Collectors.toList());
+        }
+
         return ProductResponse.builder()
                 .id(product.getId())
                 .name(product.getName())
@@ -536,6 +561,7 @@ public class ProductService {
                 .featured(product.isFeatured())
                 .images(imageResponses)
                 .variants(variantResponses)
+                .channelListings(listingSummaries)
                 .createdAt(product.getCreatedAt())
                 .updatedAt(product.getUpdatedAt())
                 .build();

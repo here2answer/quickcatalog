@@ -7,7 +7,6 @@ import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
-import org.springframework.scheduling.annotation.Async;
 import org.springframework.stereotype.Service;
 
 import java.util.UUID;
@@ -19,7 +18,9 @@ public class OndcApiLogService {
 
     private final OndcApiLogRepository repository;
 
-    @Async("ondcCallbackExecutor")
+    /**
+     * Log an incoming Beckn request. Not @Async — callers are already on async threads.
+     */
     public void logIncoming(UUID tenantId, String action, String transactionId,
                             String messageId, String bapId, String requestBody,
                             int httpStatus, String errorMessage) {
@@ -40,7 +41,9 @@ public class OndcApiLogService {
         }
     }
 
-    @Async("ondcCallbackExecutor")
+    /**
+     * Log an outgoing Beckn callback. Not @Async — callers are already on async threads.
+     */
     public void logOutgoing(UUID tenantId, String action, String transactionId,
                             String messageId, String requestBody, String responseBody,
                             int httpStatus, String errorMessage, long processingTimeMs) {

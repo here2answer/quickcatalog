@@ -231,3 +231,48 @@ export interface BarcodeResult {
   barcodeValue: string;
   barcodeImageBase64: string;
 }
+
+// Channel models
+export type ChannelType = 'AMAZON' | 'FLIPKART' | 'ONDC' | 'WEBSITE' | 'MEESHO' | 'JIOMART' | 'CUSTOM';
+export type ListingStatus = 'NOT_LISTED' | 'PENDING' | 'LIVE' | 'SUPPRESSED' | 'ERROR';
+export type SyncFrequency = 'MANUAL' | 'HOURLY' | 'DAILY' | 'WEEKLY';
+
+export interface Channel {
+  id: string;
+  channelType: ChannelType;
+  channelName: string;
+  credentials?: string;
+  fieldMapping?: string;
+  active: boolean;
+  syncFrequency: SyncFrequency;
+  lastSyncedAt?: string;
+  liveListings: number;
+  pendingListings: number;
+  errorListings: number;
+  createdAt?: string;
+}
+
+export interface ChannelListing {
+  id: string;
+  productId: string;
+  productName?: string;
+  productSku?: string;
+  channelId: string;
+  channelName?: string;
+  channelType?: ChannelType;
+  listingStatus: ListingStatus;
+  externalListingId?: string;
+  externalUrl?: string;
+  channelPrice?: number;
+  channelComparePrice?: number;
+  lastSyncedAt?: string;
+  syncError?: string;
+}
+
+export interface ListingSummary {
+  channelId: string;
+  channelName?: string;
+  channelType?: ChannelType;
+  listingStatus: ListingStatus;
+  channelPrice?: number;
+}

@@ -7,6 +7,7 @@ import { Product, ProductImage, AttributeDefinition } from '../../../core/models
 import { StatusBadgeComponent } from '../../../shared/components/status-badge/status-badge.component';
 import { PriceDisplayComponent } from '../../../shared/components/price-display/price-display.component';
 import { LoadingSkeletonComponent } from '../../../shared/components/loading-skeleton/loading-skeleton.component';
+import { ProductChannelsComponent } from '../product-channels/product-channels.component';
 import { IndianCurrencyPipe } from '../../../shared/pipes/indian-currency.pipe';
 import { RelativeTimePipe } from '../../../shared/pipes/relative-time.pipe';
 
@@ -21,6 +22,7 @@ import { RelativeTimePipe } from '../../../shared/pipes/relative-time.pipe';
     StatusBadgeComponent,
     PriceDisplayComponent,
     LoadingSkeletonComponent,
+    ProductChannelsComponent,
     IndianCurrencyPipe,
     RelativeTimePipe,
   ],
@@ -185,6 +187,9 @@ import { RelativeTimePipe } from '../../../shared/pipes/relative-time.pipe';
               </div>
             </div>
           </div>
+
+          <!-- Channel Listings -->
+          <app-product-channels [productId]="product.id"></app-product-channels>
 
           <!-- Meta -->
           <div class="text-xs text-gray-400 flex items-center gap-4">

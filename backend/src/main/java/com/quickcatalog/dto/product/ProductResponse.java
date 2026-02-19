@@ -1,5 +1,6 @@
 package com.quickcatalog.dto.product;
 
+import com.quickcatalog.channel.dto.ListingSummaryResponse;
 import com.quickcatalog.dto.image.ImageUploadResponse;
 import com.quickcatalog.dto.variant.VariantResponse;
 import lombok.AllArgsConstructor;
@@ -52,6 +53,7 @@ public class ProductResponse {
     private boolean featured;
     private List<ImageUploadResponse> images;
     private List<VariantResponse> variants;
+    private List<ListingSummaryResponse> channelListings;
     private LocalDateTime createdAt;
     private LocalDateTime updatedAt;
 }

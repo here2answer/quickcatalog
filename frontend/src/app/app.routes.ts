@@ -31,6 +31,15 @@ export const routes: Routes = [
         loadComponent: () => import('./features/categories/category-tree/category-tree.component').then(m => m.CategoryTreeComponent),
       },
       {
+        path: 'channels',
+        children: [
+          { path: '', loadComponent: () => import('./features/channels/channel-list/channel-list.component').then(m => m.ChannelListComponent) },
+          { path: 'new', loadComponent: () => import('./features/channels/channel-form/channel-form.component').then(m => m.ChannelFormComponent) },
+          { path: 'listings', loadComponent: () => import('./features/channels/listing-dashboard/listing-dashboard.component').then(m => m.ListingDashboardComponent) },
+          { path: ':id/edit', loadComponent: () => import('./features/channels/channel-form/channel-form.component').then(m => m.ChannelFormComponent) },
+        ],
+      },
+      {
         path: 'settings',
         loadComponent: () => import('./features/settings/company-settings/company-settings.component').then(m => m.CompanySettingsComponent),
       },
