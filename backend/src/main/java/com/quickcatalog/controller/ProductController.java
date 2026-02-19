@@ -135,9 +135,13 @@ public class ProductController {
     }
 
     @GetMapping("/export")
-    public ResponseEntity<byte[]> export(@RequestParam(defaultValue = "csv") String format) {
+    public ResponseEntity<byte[]> export(
+            @RequestParam(defaultValue = "csv") String format,
+            @RequestParam(required = false) UUID categoryId,
+            @RequestParam(required = false) String status,
+            @RequestParam(required = false) String q) {
         if ("excel".equalsIgnoreCase(format) || "xlsx".equalsIgnoreCase(format)) {
-            byte[] excelBytes = productService.exportExcel();
+            byte[] excelBytes = productService.exportExcel(categoryId, status, q);
             HttpHeaders headers = new HttpHeaders();
             headers.setContentType(MediaType.parseMediaType(
                     "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet"));
@@ -146,7 +150,7 @@ public class ProductController {
             return new ResponseEntity<>(excelBytes, headers, HttpStatus.OK);
         }
 
-        byte[] csvBytes = productService.exportCsv();
+        byte[] csvBytes = productService.exportCsv(categoryId, status, q);
         HttpHeaders headers = new HttpHeaders();
         headers.setContentType(MediaType.parseMediaType("text/csv"));
         headers.setContentDispositionFormData("attachment", "products.csv");

@@ -425,17 +425,14 @@ public class ProductService {
                 .collect(Collectors.toList());
     }
 
-    public byte[] exportCsv() {
-        UUID tenantId = TenantContext.getTenantId();
-        List<Product> products = productRepository
-                .findByTenantIdAndStatusNot(tenantId, ProductStatus.ARCHIVED, Pageable.unpaged())
-                .getContent();
+    public byte[] exportCsv(UUID categoryId, String status, String searchQuery) {
+        List<Product> products = getFilteredProductsForExport(categoryId, status, searchQuery);
 
         ByteArrayOutputStream baos = new ByteArrayOutputStream();
         PrintWriter writer = new PrintWriter(baos, true, StandardCharsets.UTF_8);
 
-        // CSV header
-        writer.println("Name,SKU,Category,Brand,MRP,Selling Price,GST Rate,HSN Code,Stock,Status");
+        // CSV header — matches Excel columns
+        writer.println("Name,SKU,Category,Brand,MRP,Selling Price,Cost Price,GST Rate,HSN Code,Unit,Stock,Low Stock Threshold,Status,Tags,Barcode");
 
         for (Product product : products) {
             String categoryName = "";
@@ -445,17 +442,22 @@ public class ProductService {
                         .orElse("");
             }
 
-            writer.printf("\"%s\",\"%s\",\"%s\",\"%s\",%s,%s,\"%s\",\"%s\",%s,\"%s\"%n",
+            writer.printf("\"%s\",\"%s\",\"%s\",\"%s\",%s,%s,%s,\"%s\",\"%s\",\"%s\",%s,%s,\"%s\",\"%s\",\"%s\"%n",
                     escapeCsv(product.getName()),
                     escapeCsv(product.getSku()),
                     escapeCsv(categoryName),
                     escapeCsv(product.getBrand()),
                     product.getMrp() != null ? product.getMrp().toPlainString() : "",
                     product.getSellingPrice() != null ? product.getSellingPrice().toPlainString() : "",
+                    product.getCostPrice() != null ? product.getCostPrice().toPlainString() : "",
                     product.getGstRate() != null ? product.getGstRate().name() : "",
                     escapeCsv(product.getHsnCode()),
+                    product.getUnit() != null ? product.getUnit().name() : "",
                     product.getCurrentStock() != null ? product.getCurrentStock().toPlainString() : "0",
-                    product.getStatus() != null ? product.getStatus().name() : ""
+                    product.getLowStockThreshold() != null ? product.getLowStockThreshold() : "0",
+                    product.getStatus() != null ? product.getStatus().name() : "",
+                    product.getTags() != null ? escapeCsv(String.join("|", product.getTags())) : "",
+                    escapeCsv(product.getBarcodeValue())
             );
         }
 
@@ -463,11 +465,8 @@ public class ProductService {
         return baos.toByteArray();
     }
 
-    public byte[] exportExcel() {
-        UUID tenantId = TenantContext.getTenantId();
-        List<Product> products = productRepository
-                .findByTenantIdAndStatusNot(tenantId, ProductStatus.ARCHIVED, Pageable.unpaged())
-                .getContent();
+    public byte[] exportExcel(UUID categoryId, String status, String searchQuery) {
+        List<Product> products = getFilteredProductsForExport(categoryId, status, searchQuery);
 
         try (XSSFWorkbook workbook = new XSSFWorkbook()) {
             XSSFSheet sheet = workbook.createSheet("Products");
@@ -523,6 +522,30 @@ public class ProductService {
             return baos.toByteArray();
         } catch (IOException e) {
             throw new RuntimeException("Failed to generate Excel file", e);
+        }
+    }
+
+    private List<Product> getFilteredProductsForExport(UUID categoryId, String status, String searchQuery) {
+        UUID tenantId = TenantContext.getTenantId();
+
+        if (searchQuery != null && !searchQuery.isBlank()) {
+            Page<Product> page = productRepository.fullTextSearch(tenantId, searchQuery, Pageable.unpaged());
+            if (page.isEmpty()) {
+                page = productRepository.fuzzySearch(tenantId, searchQuery, Pageable.unpaged());
+            }
+            return page.getContent();
+        }
+
+        if (categoryId != null && status != null) {
+            ProductStatus ps = ProductStatus.valueOf(status);
+            return productRepository.findByTenantIdAndCategoryIdAndStatus(tenantId, categoryId, ps, Pageable.unpaged()).getContent();
+        } else if (categoryId != null) {
+            return productRepository.findByTenantIdAndCategoryIdAndStatusNot(tenantId, categoryId, ProductStatus.ARCHIVED, Pageable.unpaged()).getContent();
+        } else if (status != null) {
+            ProductStatus ps = ProductStatus.valueOf(status);
+            return productRepository.findByTenantIdAndStatus(tenantId, ps, Pageable.unpaged()).getContent();
+        } else {
+            return productRepository.findByTenantIdAndStatusNot(tenantId, ProductStatus.ARCHIVED, Pageable.unpaged()).getContent();
         }
     }
 
