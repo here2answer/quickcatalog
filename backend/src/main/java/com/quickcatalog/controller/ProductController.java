@@ -34,8 +34,23 @@ public class ProductController {
             @RequestParam(required = false) UUID categoryId,
             @RequestParam(required = false) String status,
             @RequestParam(required = false) String sort,
+            @RequestParam(required = false) String q,
             @RequestParam(defaultValue = "0") int page,
             @RequestParam(defaultValue = "20") int size) {
+        if (q != null && !q.isBlank()) {
+            // Barcode auto-detect: 8-14 digit number
+            if (q.trim().matches("\\d{8,14}")) {
+                try {
+                    ProductListResponse product = productService.findByBarcode(q.trim());
+                    PagedResponse<ProductListResponse> response = PagedResponse.of(List.of(product), 0, 1, 1, 1);
+                    return ApiResponse.success(response);
+                } catch (Exception ignored) {
+                    // Fall through to text search
+                }
+            }
+            PagedResponse<ProductListResponse> response = productService.search(q.trim(), page, size);
+            return ApiResponse.success(response);
+        }
         PagedResponse<ProductListResponse> response = productService.list(categoryId, status, sort, page, size);
         return ApiResponse.success(response);
     }
