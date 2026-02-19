@@ -15,6 +15,7 @@ export class ProductService {
     sort?: string;
     page?: number;
     size?: number;
+    q?: string;
   }): Observable<ApiResponse<PagedResponse<ProductListItem>>> {
     let httpParams = new HttpParams();
     if (params.categoryId) httpParams = httpParams.set('categoryId', params.categoryId);
@@ -22,6 +23,7 @@ export class ProductService {
     if (params.sort) httpParams = httpParams.set('sort', params.sort);
     if (params.page !== undefined) httpParams = httpParams.set('page', params.page.toString());
     if (params.size !== undefined) httpParams = httpParams.set('size', params.size.toString());
+    if (params.q) httpParams = httpParams.set('q', params.q);
 
     return this.http.get<ApiResponse<PagedResponse<ProductListItem>>>(this.API, {
       params: httpParams,
@@ -57,7 +59,15 @@ export class ProductService {
     page?: number,
     size?: number
   ): Observable<ApiResponse<PagedResponse<ProductListItem>>> {
-    let httpParams = new HttpParams().set('q', query);
+    let httpParams = new HttpParams();
+
+    // Auto-detect barcode: 8-14 digit number
+    if (/^\d{8,14}$/.test(query.trim())) {
+      httpParams = httpParams.set('barcode', query.trim());
+    } else {
+      httpParams = httpParams.set('q', query);
+    }
+
     if (page !== undefined) httpParams = httpParams.set('page', page.toString());
     if (size !== undefined) httpParams = httpParams.set('size', size.toString());
 
@@ -70,9 +80,17 @@ export class ProductService {
     return this.http.get<ApiResponse<ProductListItem[]>>(`${this.API}/low-stock`);
   }
 
-  exportProducts(format: 'csv' | 'excel' = 'csv'): Observable<Blob> {
+  exportProducts(format: 'csv' | 'excel' = 'csv', filters?: {
+    categoryId?: string;
+    status?: string;
+    q?: string;
+  }): Observable<Blob> {
+    let params: any = { format };
+    if (filters?.categoryId) params.categoryId = filters.categoryId;
+    if (filters?.status) params.status = filters.status;
+    if (filters?.q) params.q = filters.q;
     return this.http.get(`${this.API}/export`, {
-      params: { format },
+      params,
       responseType: 'blob',
     });
   }

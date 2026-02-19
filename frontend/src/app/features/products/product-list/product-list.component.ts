@@ -483,7 +483,11 @@ export class ProductListComponent implements OnInit, OnDestroy {
     this.showExportMenu = false;
     this.exporting = true;
     const ext = format === 'excel' ? 'xlsx' : 'csv';
-    this.productService.exportProducts(format).subscribe({
+    this.productService.exportProducts(format, {
+      categoryId: this.selectedCategory || undefined,
+      status: this.selectedStatus || undefined,
+      q: this.searchQuery || undefined,
+    }).subscribe({
       next: (blob) => {
         const url = window.URL.createObjectURL(blob);
         const a = document.createElement('a');
@@ -504,41 +508,27 @@ export class ProductListComponent implements OnInit, OnDestroy {
   private loadProducts(): void {
     this.loading = true;
 
-    if (this.searchQuery) {
-      this.productService
-        .searchProducts(this.searchQuery, this.currentPage, this.pageSize)
-        .subscribe({
-          next: (res) => {
-            this.products = res.data.content;
-            this.totalPages = res.data.totalPages;
-            this.totalElements = res.data.totalElements;
-            this.loading = false;
-          },
-          error: () => {
-            this.loading = false;
-          },
-        });
-    } else {
-      this.productService
-        .getProducts({
-          categoryId: this.selectedCategory || undefined,
-          status: this.selectedStatus || undefined,
-          sort: this.selectedSort,
-          page: this.currentPage,
-          size: this.pageSize,
-        })
-        .subscribe({
-          next: (res) => {
-            this.products = res.data.content;
-            this.totalPages = res.data.totalPages;
-            this.totalElements = res.data.totalElements;
-            this.loading = false;
-          },
-          error: () => {
-            this.loading = false;
-          },
-        });
-    }
+    // Always use getProducts with filters — search query goes as 'q' param when present
+    this.productService
+      .getProducts({
+        categoryId: this.selectedCategory || undefined,
+        status: this.selectedStatus || undefined,
+        sort: this.selectedSort,
+        page: this.currentPage,
+        size: this.pageSize,
+        q: this.searchQuery || undefined,
+      })
+      .subscribe({
+        next: (res) => {
+          this.products = res.data.content;
+          this.totalPages = res.data.totalPages;
+          this.totalElements = res.data.totalElements;
+          this.loading = false;
+        },
+        error: () => {
+          this.loading = false;
+        },
+      });
   }
 
   private loadCategories(): void {
