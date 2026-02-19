@@ -17,4 +17,7 @@ public class UserDTO {
     private boolean active;
     private LocalDateTime lastLoginAt;
     private LocalDateTime createdAt;
+
+    /** Only populated on invite response — never returned on list/get */
+    private String tempPassword;
 }
