@@ -96,7 +96,7 @@ public class SearchProcessingService {
                             .collect(Collectors.toList());
 
                     List<Product> products = productIds.stream()
-                            .map(pid -> productRepository.findByIdAndTenantId(pid, tenantId).orElse(null))
+                            .map(pid -> productRepository.findByIdAndTenantIdWithImages(pid, tenantId).orElse(null))
                             .filter(p -> p != null && p.getStatus() == ProductStatus.ACTIVE)
                             .collect(Collectors.toList());
 

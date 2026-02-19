@@ -6,7 +6,6 @@ import com.quickcatalog.ondc.entity.OndcSubscriber;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.*;
-import org.springframework.scheduling.annotation.Async;
 import org.springframework.stereotype.Service;
 import org.springframework.web.client.RestTemplate;
 
@@ -14,7 +13,7 @@ import java.util.UUID;
 
 /**
  * Sends signed callbacks (on_search, on_select, etc.) to Buyer App (BAP) URIs.
- * All callbacks are sent asynchronously after returning ACK to the BAP.
+ * Called from async processing methods — no @Async here to avoid nested dispatch issues.
  */
 @Slf4j
 @Service
@@ -28,6 +27,7 @@ public class CallbackService {
 
     /**
      * Send a signed callback to the BAP URI.
+     * Not @Async — callers are already on async threads (e.g., SearchProcessingService).
      *
      * @param bapUri The BAP's callback URL base
      * @param action The callback action (e.g., "on_search")
@@ -36,7 +36,6 @@ public class CallbackService {
      * @param tenantId Tenant ID for logging
      * @param transactionId Transaction ID for logging
      */
-    @Async("ondcCallbackExecutor")
     public void sendCallback(String bapUri, String action, Object payload,
                              OndcSubscriber subscriber, UUID tenantId, String transactionId) {
         long startTime = System.currentTimeMillis();

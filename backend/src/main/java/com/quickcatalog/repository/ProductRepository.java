@@ -48,4 +48,7 @@ public interface ProductRepository extends JpaRepository<Product, UUID> {
     boolean existsByTenantIdAndSku(UUID tenantId, String sku);
 
     List<Product> findByTenantIdAndStatusNotOrderByCreatedAtDesc(UUID tenantId, ProductStatus status, Pageable pageable);
+
+    @Query("SELECT p FROM Product p LEFT JOIN FETCH p.images WHERE p.id = :id AND p.tenantId = :tenantId")
+    Optional<Product> findByIdAndTenantIdWithImages(@Param("id") UUID id, @Param("tenantId") UUID tenantId);
 }
