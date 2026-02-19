@@ -27,6 +27,7 @@ import java.util.stream.Collectors;
 public class OndcOrderController {
 
     private final OndcOrderRepository orderRepository;
+    private final OndcOrderItemRepository orderItemRepository;
     private final OndcFulfillmentRepository fulfillmentRepository;
     private final OndcPaymentRepository paymentRepository;
     private final ProductRepository productRepository;
@@ -59,7 +60,7 @@ public class OndcOrderController {
     @GetMapping("/{id}")
     public ApiResponse<OrderDetailResponse> getById(@PathVariable UUID id) {
         UUID tenantId = TenantContext.getTenantId();
-        OndcOrder order = orderRepository.findByIdAndTenantId(id, tenantId)
+        OndcOrder order = orderRepository.findByIdAndTenantIdWithItems(id, tenantId)
                 .orElseThrow(() -> new ResourceNotFoundException("OndcOrder", "id", id));
         return ApiResponse.success(mapToDetailResponse(order));
     }
@@ -68,7 +69,7 @@ public class OndcOrderController {
     @PreAuthorize("hasAnyRole('OWNER','ADMIN')")
     public ApiResponse<OrderDetailResponse> accept(@PathVariable UUID id) {
         UUID tenantId = TenantContext.getTenantId();
-        OndcOrder order = orderRepository.findByIdAndTenantId(id, tenantId)
+        OndcOrder order = orderRepository.findByIdAndTenantIdWithItems(id, tenantId)
                 .orElseThrow(() -> new ResourceNotFoundException("OndcOrder", "id", id));
 
         if (order.getState() != OndcOrderState.CREATED) {
@@ -85,13 +86,14 @@ public class OndcOrderController {
         dto.setId(order.getId());
         dto.setBecknOrderId(order.getBecknOrderId());
         dto.setState(order.getState());
-        dto.setItemCount(order.getOrderItems() != null ? order.getOrderItems().size() : 0);
         dto.setCreatedAt(order.getCreatedAt());
         dto.setUpdatedAt(order.getUpdatedAt());
 
-        // Compute total from order items
-        if (order.getOrderItems() != null && !order.getOrderItems().isEmpty()) {
-            BigDecimal total = order.getOrderItems().stream()
+        // Use separate query to avoid lazy loading issues
+        List<OndcOrderItem> items = orderItemRepository.findByOndcOrderId(order.getId());
+        dto.setItemCount(items.size());
+        if (!items.isEmpty()) {
+            BigDecimal total = items.stream()
                     .map(OndcOrderItem::getTotalPrice)
                     .reduce(BigDecimal.ZERO, BigDecimal::add);
             dto.setTotalAmount(total);
