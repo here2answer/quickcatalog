@@ -44,4 +44,13 @@ public class AuthController {
         UserResponse response = authService.getCurrentUser(principal.getId(), principal.getTenantId());
         return ApiResponse.success(response);
     }
+
+    @PostMapping("/change-password")
+    @ResponseStatus(HttpStatus.OK)
+    public ApiResponse<Void> changePassword(
+            @CurrentUser UserPrincipal principal,
+            @Valid @RequestBody ChangePasswordRequest request) {
+        authService.changePassword(principal.getId(), request.getCurrentPassword(), request.getNewPassword());
+        return ApiResponse.success(null);
+    }
 }

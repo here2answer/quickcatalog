@@ -1,7 +1,7 @@
 import { Injectable } from '@angular/core';
 import { HttpClient, HttpParams } from '@angular/common/http';
 import { Observable } from 'rxjs';
-import { ApiResponse, PagedResponse, Product, ProductListItem } from '../../../core/models';
+import { ApiResponse, PagedResponse, Product, ProductListItem, DuplicateGroup, BarcodeResult } from '../../../core/models';
 
 @Injectable({ providedIn: 'root' })
 export class ProductService {
@@ -70,8 +70,28 @@ export class ProductService {
     return this.http.get<ApiResponse<ProductListItem[]>>(`${this.API}/low-stock`);
   }
 
-  exportProducts(): Observable<Blob> {
+  exportProducts(format: 'csv' | 'excel' = 'csv'): Observable<Blob> {
     return this.http.get(`${this.API}/export`, {
+      params: { format },
+      responseType: 'blob',
+    });
+  }
+
+  findDuplicates(id: string): Observable<ApiResponse<DuplicateGroup>> {
+    return this.http.get<ApiResponse<DuplicateGroup>>(`${this.API}/${id}/duplicates`);
+  }
+
+  scanDuplicates(): Observable<ApiResponse<DuplicateGroup[]>> {
+    return this.http.get<ApiResponse<DuplicateGroup[]>>(`${this.API}/duplicates/scan`);
+  }
+
+  generateBarcode(id: string): Observable<ApiResponse<BarcodeResult>> {
+    return this.http.post<ApiResponse<BarcodeResult>>(`${this.API}/${id}/generate-barcode`, {});
+  }
+
+  getBarcodeImage(id: string, value: string): Observable<Blob> {
+    return this.http.get(`${this.API}/${id}/barcode-image`, {
+      params: { value },
       responseType: 'blob',
     });
   }

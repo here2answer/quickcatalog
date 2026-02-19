@@ -6,5 +6,6 @@ public enum ActionType {
     DELETED,
     PUBLISHED,
     UNPUBLISHED,
-    STATUS_CHANGED
+    STATUS_CHANGED,
+    IMPORTED
 }

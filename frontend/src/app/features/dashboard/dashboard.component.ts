@@ -7,6 +7,8 @@ import {
   DashboardSummary,
   RecentActivity,
   ProductListItem,
+  CatalogHealth,
+  ChannelStatus,
 } from '../../core/models';
 import { StatusBadgeComponent } from '../../shared/components/status-badge/status-badge.component';
 import { PriceDisplayComponent } from '../../shared/components/price-display/price-display.component';
@@ -111,6 +113,112 @@ import { RelativeTimePipe } from '../../shared/pipes/relative-time.pipe';
               <svg class="w-6 h-6 text-red-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-2.5L13.732 4.5c-.77-.833-2.694-.833-3.464 0L3.34 16.5c-.77.833.192 2.5 1.732 2.5z"/>
               </svg>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Low Stock Alerts -->
+      <div *ngIf="!loadingLowStock && lowStockProducts.length > 0" class="mb-8">
+        <div class="flex items-center justify-between mb-4">
+          <h2 class="text-lg font-semibold text-gray-900">
+            Low Stock Alerts
+            <span class="ml-2 inline-flex items-center rounded-full bg-red-100 px-2.5 py-0.5 text-xs font-medium text-red-700">
+              {{ lowStockProducts.length }}
+            </span>
+          </h2>
+        </div>
+        <div class="bg-white rounded-xl border border-red-200 divide-y divide-gray-100">
+          <div *ngFor="let product of lowStockProducts.slice(0, 5); trackBy: trackByProductId" class="flex items-center justify-between px-5 py-3">
+            <div class="flex items-center gap-3">
+              <div class="w-8 h-8 bg-red-100 rounded-lg flex items-center justify-center flex-shrink-0">
+                <svg class="w-4 h-4 text-red-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-2.5L13.732 4.5c-.77-.833-2.694-.833-3.464 0L3.34 16.5c-.77.833.192 2.5 1.732 2.5z"/>
+                </svg>
+              </div>
+              <div>
+                <p class="text-sm font-medium text-gray-900">{{ product.name }}</p>
+                <p class="text-xs text-gray-500">SKU: {{ product.sku || '-' }}</p>
+              </div>
+            </div>
+            <div class="text-right">
+              <p class="text-sm font-bold text-red-600">{{ product.currentStock ?? 0 }} left</p>
+              <p class="text-xs text-gray-400">Threshold: {{ product.lowStockThreshold ?? 10 }}</p>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Catalog Health & Channel Status -->
+      <div *ngIf="!loadingHealth || !loadingChannels" class="grid grid-cols-1 lg:grid-cols-2 gap-6 mb-8">
+        <!-- Catalog Health -->
+        <div *ngIf="!loadingHealth && catalogHealth" class="bg-white rounded-xl border border-gray-200 p-5">
+          <div class="flex items-center justify-between mb-4">
+            <h2 class="text-base font-semibold text-gray-900">Catalog Health</h2>
+            <span class="text-2xl font-bold text-emerald-600">{{ catalogHealth.completenessPercent }}%</span>
+          </div>
+          <div class="space-y-3">
+            <div>
+              <div class="flex items-center justify-between text-xs mb-1">
+                <span class="text-gray-500">Products with Images</span>
+                <span class="font-medium text-gray-700">{{ catalogHealth.productsWithImages }}/{{ catalogHealth.totalProducts }}</span>
+              </div>
+              <div class="h-2 bg-gray-200 rounded-full"><div class="h-2 bg-emerald-500 rounded-full" [style.width.%]="healthPercent('images')"></div></div>
+            </div>
+            <div>
+              <div class="flex items-center justify-between text-xs mb-1">
+                <span class="text-gray-500">With Descriptions</span>
+                <span class="font-medium text-gray-700">{{ catalogHealth.productsWithDescriptions }}/{{ catalogHealth.totalProducts }}</span>
+              </div>
+              <div class="h-2 bg-gray-200 rounded-full"><div class="h-2 bg-blue-500 rounded-full" [style.width.%]="healthPercent('descriptions')"></div></div>
+            </div>
+            <div>
+              <div class="flex items-center justify-between text-xs mb-1">
+                <span class="text-gray-500">With SEO</span>
+                <span class="font-medium text-gray-700">{{ catalogHealth.productsWithSeo }}/{{ catalogHealth.totalProducts }}</span>
+              </div>
+              <div class="h-2 bg-gray-200 rounded-full"><div class="h-2 bg-amber-500 rounded-full" [style.width.%]="healthPercent('seo')"></div></div>
+            </div>
+            <div>
+              <div class="flex items-center justify-between text-xs mb-1">
+                <span class="text-gray-500">With HSN Code</span>
+                <span class="font-medium text-gray-700">{{ catalogHealth.productsWithHsn }}/{{ catalogHealth.totalProducts }}</span>
+              </div>
+              <div class="h-2 bg-gray-200 rounded-full"><div class="h-2 bg-emerald-500 rounded-full" [style.width.%]="healthPercent('hsn')"></div></div>
+            </div>
+            <div>
+              <div class="flex items-center justify-between text-xs mb-1">
+                <span class="text-gray-500">With Barcode</span>
+                <span class="font-medium text-gray-700">{{ catalogHealth.productsWithBarcode }}/{{ catalogHealth.totalProducts }}</span>
+              </div>
+              <div class="h-2 bg-gray-200 rounded-full"><div class="h-2 bg-violet-500 rounded-full" [style.width.%]="healthPercent('barcode')"></div></div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Channel Status -->
+        <div *ngIf="!loadingChannels && channelStatuses.length > 0" class="bg-white rounded-xl border border-gray-200 p-5">
+          <h2 class="text-base font-semibold text-gray-900 mb-4">Channel Status</h2>
+          <div class="space-y-3">
+            <div *ngFor="let ch of channelStatuses" class="flex items-center justify-between p-3 bg-gray-50 rounded-lg">
+              <div>
+                <p class="text-sm font-medium text-gray-900">{{ ch.channelName }}</p>
+                <p class="text-xs text-gray-500">{{ ch.channelType }}</p>
+              </div>
+              <div class="flex items-center gap-3">
+                <div class="text-center">
+                  <p class="text-sm font-bold text-emerald-600">{{ ch.liveCount }}</p>
+                  <p class="text-xs text-gray-400">Live</p>
+                </div>
+                <div class="text-center">
+                  <p class="text-sm font-bold text-yellow-600">{{ ch.pendingCount }}</p>
+                  <p class="text-xs text-gray-400">Pending</p>
+                </div>
+                <div class="text-center">
+                  <p class="text-sm font-bold text-red-600">{{ ch.errorCount }}</p>
+                  <p class="text-xs text-gray-400">Error</p>
+                </div>
+              </div>
             </div>
           </div>
         </div>
@@ -256,15 +364,37 @@ export class DashboardComponent implements OnInit {
   summary: DashboardSummary | null = null;
   recentProducts: ProductListItem[] = [];
   activities: RecentActivity[] = [];
+  catalogHealth: CatalogHealth | null = null;
+  channelStatuses: ChannelStatus[] = [];
+  lowStockProducts: ProductListItem[] = [];
 
   loadingSummary = true;
   loadingProducts = true;
   loadingActivity = true;
+  loadingHealth = true;
+  loadingChannels = true;
+  loadingLowStock = true;
 
   ngOnInit(): void {
     this.loadSummary();
     this.loadRecentProducts();
     this.loadRecentActivity();
+    this.loadCatalogHealth();
+    this.loadChannelStatus();
+    this.loadLowStockProducts();
+  }
+
+  healthPercent(type: string): number {
+    if (!this.catalogHealth || this.catalogHealth.totalProducts === 0) return 0;
+    const total = this.catalogHealth.totalProducts;
+    switch (type) {
+      case 'images': return Math.round((this.catalogHealth.productsWithImages / total) * 100);
+      case 'descriptions': return Math.round((this.catalogHealth.productsWithDescriptions / total) * 100);
+      case 'seo': return Math.round((this.catalogHealth.productsWithSeo / total) * 100);
+      case 'hsn': return Math.round((this.catalogHealth.productsWithHsn / total) * 100);
+      case 'barcode': return Math.round((this.catalogHealth.productsWithBarcode / total) * 100);
+      default: return 0;
+    }
   }
 
   private loadSummary(): void {
@@ -299,6 +429,42 @@ export class DashboardComponent implements OnInit {
       },
       error: () => {
         this.loadingActivity = false;
+      },
+    });
+  }
+
+  private loadCatalogHealth(): void {
+    this.dashboardService.getCatalogHealth().subscribe({
+      next: (res) => {
+        this.catalogHealth = res.data;
+        this.loadingHealth = false;
+      },
+      error: () => {
+        this.loadingHealth = false;
+      },
+    });
+  }
+
+  private loadChannelStatus(): void {
+    this.dashboardService.getChannelStatus().subscribe({
+      next: (res) => {
+        this.channelStatuses = res.data || [];
+        this.loadingChannels = false;
+      },
+      error: () => {
+        this.loadingChannels = false;
+      },
+    });
+  }
+
+  private loadLowStockProducts(): void {
+    this.productService.getLowStock().subscribe({
+      next: (res) => {
+        this.lowStockProducts = res.data || [];
+        this.loadingLowStock = false;
+      },
+      error: () => {
+        this.loadingLowStock = false;
       },
     });
   }

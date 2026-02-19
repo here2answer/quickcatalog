@@ -276,3 +276,270 @@ export interface ListingSummary {
   listingStatus: ListingStatus;
   channelPrice?: number;
 }
+
+// Import models
+export interface ImportJob {
+  id: string;
+  fileName: string;
+  totalRows: number;
+  processedRows: number;
+  successCount: number;
+  errorCount: number;
+  status: 'UPLOADED' | 'PROCESSING' | 'COMPLETED' | 'FAILED';
+  createdAt: string;
+  updatedAt: string;
+}
+
+export interface ImportError {
+  row: number;
+  field: string;
+  error: string;
+}
+
+// User management models
+export interface UserInfo {
+  id: string;
+  name: string;
+  email: string;
+  phone?: string;
+  role: string;
+  active: boolean;
+  lastLoginAt?: string;
+  createdAt: string;
+}
+
+export interface InviteUserRequest {
+  name: string;
+  email: string;
+  role: string;
+  phone?: string;
+}
+
+export interface UpdateRoleRequest {
+  role: string;
+}
+
+// Duplicate detection models
+export interface DuplicateGroup {
+  productId: string;
+  productName: string;
+  productSku: string;
+  matches: DuplicateMatch[];
+}
+
+export interface DuplicateMatch {
+  id: string;
+  name: string;
+  sku: string;
+  status: string;
+  matchType: string;
+  similarityScore: number;
+}
+
+// ONDC models
+export type OndcEnvironment = 'STAGING' | 'PRE_PROD' | 'PRODUCTION';
+export type RegistrationStatus = 'PENDING' | 'INITIATED' | 'SUBSCRIBED' | 'FAILED';
+export type OndcOrderState = 'CREATED' | 'ACCEPTED' | 'IN_PROGRESS' | 'COMPLETED' | 'CANCELLED' | 'RETURNED';
+export type FulfillmentType = 'DELIVERY' | 'SELF_PICKUP';
+export type FulfillmentState = 'PENDING' | 'PACKED' | 'AGENT_ASSIGNED' | 'PICKED_UP' | 'OUT_FOR_DELIVERY' | 'ORDER_DELIVERED' | 'CANCELLED' | 'RTO_INITIATED' | 'RTO_DELIVERED';
+export type PaymentType = 'PRE_PAID' | 'ON_DELIVERY' | 'POST_FULFILLMENT';
+export type SettlementStatus = 'PENDING' | 'SETTLED';
+
+export interface OndcSubscriber {
+  id: string;
+  subscriberId: string;
+  subscriberUrl: string;
+  environment: OndcEnvironment;
+  signingPublicKey?: string;
+  encryptionPublicKey?: string;
+  uniqueKeyId?: string;
+  domain?: string;
+  cityCodes?: string[];
+  registrationStatus: RegistrationStatus;
+  lastSubscribeAt?: string;
+  createdAt?: string;
+}
+
+export interface OndcSubscriberRequest {
+  subscriberId: string;
+  subscriberUrl: string;
+  environment?: OndcEnvironment;
+  domain?: string;
+  cityCodes?: string[];
+}
+
+export interface OndcProvider {
+  id: string;
+  providerId: string;
+  name: string;
+  shortDesc?: string;
+  longDesc?: string;
+  logoUrl?: string;
+  gpsCoordinates: string;
+  addressStreet: string;
+  addressCity: string;
+  addressState: string;
+  addressAreaCode: string;
+  addressCountry: string;
+  contactPhone: string;
+  contactEmail: string;
+  supportPhone?: string;
+  supportEmail?: string;
+  supportUrl?: string;
+  fssaiLicenseNo?: string;
+  storeTimingStart?: string;
+  storeTimingEnd?: string;
+  storeDays?: string;
+  defaultTimeToShip?: string;
+  defaultReturnable?: boolean;
+  defaultCancellable?: boolean;
+  defaultReturnWindow?: string;
+  defaultCodAvailable?: boolean;
+  active: boolean;
+  createdAt?: string;
+}
+
+export interface OndcProviderRequest {
+  name: string;
+  shortDesc?: string;
+  longDesc?: string;
+  logoUrl?: string;
+  gpsCoordinates: string;
+  addressStreet: string;
+  addressCity: string;
+  addressState: string;
+  addressAreaCode: string;
+  addressCountry?: string;
+  contactPhone: string;
+  contactEmail: string;
+  supportPhone?: string;
+  supportEmail?: string;
+  supportUrl?: string;
+  fssaiLicenseNo?: string;
+  storeTimingStart?: string;
+  storeTimingEnd?: string;
+  storeDays?: string;
+  defaultTimeToShip?: string;
+  defaultReturnable?: boolean;
+  defaultCancellable?: boolean;
+  defaultReturnWindow?: string;
+  defaultCodAvailable?: boolean;
+}
+
+export interface OndcProductConfig {
+  id: string;
+  productId: string;
+  ondcDomain: string;
+  ondcCategoryId?: string;
+  timeToShip?: string;
+  returnable?: boolean;
+  cancellable?: boolean;
+  returnWindow?: string;
+  sellerPickupReturn?: boolean;
+  codAvailable?: boolean;
+  maxOrderQuantity?: number;
+  countryOfOrigin?: string;
+  isVeg?: boolean;
+  isNonVeg?: boolean;
+  isEgg?: boolean;
+  statutoryInfo?: string;
+  publishedToOndc: boolean;
+  lastPublishedAt?: string;
+}
+
+export interface OndcProductConfigRequest {
+  ondcDomain: string;
+  ondcCategoryId?: string;
+  timeToShip?: string;
+  returnable?: boolean;
+  cancellable?: boolean;
+  returnWindow?: string;
+  sellerPickupReturn?: boolean;
+  codAvailable?: boolean;
+  maxOrderQuantity?: number;
+  countryOfOrigin?: string;
+  isVeg?: boolean;
+  isNonVeg?: boolean;
+  isEgg?: boolean;
+  statutoryInfo?: string;
+}
+
+export interface OndcOrderListItem {
+  id: string;
+  becknOrderId: string;
+  state: OndcOrderState;
+  itemCount: number;
+  totalAmount?: number;
+  buyerName?: string;
+  buyerPhone?: string;
+  createdAt: string;
+  updatedAt?: string;
+}
+
+export interface OndcOrderDetail {
+  id: string;
+  becknOrderId: string;
+  state: OndcOrderState;
+  createdAt: string;
+  updatedAt?: string;
+  billingName?: string;
+  billingPhone?: string;
+  billingEmail?: string;
+  billingAddress?: any;
+  items: OndcOrderItem[];
+  fulfillment?: OndcFulfillmentInfo;
+  payment?: OndcPaymentInfo;
+}
+
+export interface OndcOrderItem {
+  id: string;
+  productId: string;
+  productName?: string;
+  quantity: number;
+  unitPrice: number;
+  taxAmount: number;
+  totalAmount: number;
+}
+
+export interface OndcFulfillmentInfo {
+  id: string;
+  type: FulfillmentType;
+  state: FulfillmentState;
+  trackingUrl?: string;
+  agentName?: string;
+  agentPhone?: string;
+  deliveryAddress?: any;
+  deliveryGps?: string;
+}
+
+export interface OndcPaymentInfo {
+  id: string;
+  type: PaymentType;
+  collectedBy?: string;
+  transactionId?: string;
+  settlementStatus: SettlementStatus;
+  buyerAppFinderFeeAmount?: number;
+}
+
+// Enhanced dashboard models
+export interface ChannelStatus {
+  channelId: string;
+  channelName: string;
+  channelType: string;
+  liveCount: number;
+  pendingCount: number;
+  errorCount: number;
+  totalListings: number;
+}
+
+export interface CatalogHealth {
+  totalProducts: number;
+  productsWithImages: number;
+  productsWithDescriptions: number;
+  productsWithSeo: number;
+  productsWithBarcode: number;
+  productsWithHsn: number;
+  completenessPercent: number;
+  statusDistribution: Record<string, number>;
+  categoryDistribution: Record<string, number>;
+}

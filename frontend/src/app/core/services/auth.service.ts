@@ -41,6 +41,13 @@ export class AuthService {
     );
   }
 
+  changePassword(currentPassword: string, newPassword: string): Observable<ApiResponse<void>> {
+    return this.http.post<ApiResponse<void>>(`${this.API_URL}/change-password`, {
+      currentPassword,
+      newPassword,
+    });
+  }
+
   loadCurrentUser(): Observable<ApiResponse<User>> {
     return this.http.get<ApiResponse<User>>(`${this.API_URL}/me`).pipe(
       tap(res => this.currentUser.set(res.data)),
@@ -55,6 +62,21 @@ export class AuthService {
 
   getAccessToken(): string | null {
     return this.storage.getAccessToken();
+  }
+
+  hasRole(role: string): boolean {
+    const user = this.currentUser();
+    if (!user) return false;
+    return user.role === role;
+  }
+
+  hasMinRole(minRole: string): boolean {
+    const hierarchy = ['VIEWER', 'EDITOR', 'ADMIN', 'OWNER'];
+    const user = this.currentUser();
+    if (!user) return false;
+    const userLevel = hierarchy.indexOf(user.role);
+    const minLevel = hierarchy.indexOf(minRole);
+    return userLevel >= minLevel;
   }
 
   private handleAuthResponse(data: LoginResponse): void {

@@ -14,7 +14,7 @@ CREATE TYPE ondc_environment AS ENUM ('STAGING', 'PRE_PROD', 'PRODUCTION');
 
 CREATE TYPE registration_status AS ENUM ('PENDING', 'INITIATED', 'SUBSCRIBED', 'FAILED');
 
-CREATE TYPE ondc_order_state AS ENUM ('CREATED', 'ACCEPTED', 'IN_PROGRESS', 'COMPLETED', 'CANCELLED');
+CREATE TYPE ondc_order_state AS ENUM ('CREATED', 'ACCEPTED', 'IN_PROGRESS', 'COMPLETED', 'CANCELLED', 'RETURNED');
 
 CREATE TYPE fulfillment_state AS ENUM (
     'PENDING', 'PACKED', 'AGENT_ASSIGNED', 'PICKED_UP',
@@ -149,13 +149,18 @@ CREATE TRIGGER trg_ondc_product_config_updated_at
 CREATE TABLE ondc_order (
     id                      UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
     tenant_id               UUID NOT NULL REFERENCES tenant(id),
-    provider_id             UUID NOT NULL REFERENCES ondc_provider(id),
-    ondc_order_id           VARCHAR(255) NOT NULL,
-    transaction_id          VARCHAR(255) NOT NULL,
-    bap_id                  VARCHAR(500) NOT NULL,
-    bap_uri                 VARCHAR(500) NOT NULL,
+    ondc_provider_id        UUID REFERENCES ondc_provider(id),
+    beckn_order_id          VARCHAR(255) UNIQUE NOT NULL,
+    transaction_id          VARCHAR(255),
+    bap_id                  VARCHAR(500),
+    bap_uri                 VARCHAR(500),
     domain                  VARCHAR(20),
-    order_state             ondc_order_state DEFAULT 'CREATED',
+    state                   ondc_order_state NOT NULL DEFAULT 'CREATED',
+    items                   JSONB,
+    billing                 JSONB,
+    fulfillment             JSONB,
+    payment                 JSONB,
+    quote                   JSONB,
     cancellation_reason     VARCHAR(500),
     cancelled_by            VARCHAR(20),
     billing_name            VARCHAR(255),
@@ -167,9 +172,8 @@ CREATE TABLE ondc_order (
 );
 
 CREATE INDEX idx_ondc_order_tenant_id ON ondc_order(tenant_id);
-CREATE INDEX idx_ondc_order_transaction ON ondc_order(transaction_id);
-CREATE INDEX idx_ondc_order_ondc_id ON ondc_order(ondc_order_id);
-CREATE INDEX idx_ondc_order_state ON ondc_order(tenant_id, order_state);
+CREATE INDEX idx_ondc_order_beckn_id ON ondc_order(beckn_order_id);
+CREATE INDEX idx_ondc_order_state ON ondc_order(tenant_id, state);
 
 CREATE TRIGGER trg_ondc_order_updated_at
     BEFORE UPDATE ON ondc_order FOR EACH ROW

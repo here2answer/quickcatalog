@@ -19,6 +19,13 @@ import { LoadingSkeletonComponent } from '../../../shared/components/loading-ske
         <p class="mt-1 text-sm text-gray-500">Manage your company profile and preferences</p>
       </div>
 
+      <!-- Settings Tabs -->
+      <nav class="flex gap-1 bg-gray-100 rounded-lg p-1 mb-6">
+        <a routerLink="/settings" class="flex-1 text-center px-4 py-2 text-sm font-medium rounded-md bg-white text-gray-900 shadow-sm">Company</a>
+        <a routerLink="/settings/ai" class="flex-1 text-center px-4 py-2 text-sm font-medium rounded-md text-gray-500 hover:text-gray-700">AI</a>
+        <a routerLink="/settings/users" class="flex-1 text-center px-4 py-2 text-sm font-medium rounded-md text-gray-500 hover:text-gray-700">Team</a>
+      </nav>
+
       <!-- Loading -->
       <div *ngIf="loading" class="bg-white rounded-xl border border-gray-200 p-6">
         <app-loading-skeleton [lines]="6"></app-loading-skeleton>
@@ -102,25 +109,6 @@ import { LoadingSkeletonComponent } from '../../../shared/components/loading-ske
           </div>
         </form>
       </div>
-
-      <!-- AI Settings Link -->
-      <a *ngIf="!loading" routerLink="/settings/ai"
-        class="mt-6 flex items-center justify-between bg-white rounded-xl border border-gray-200 p-6 hover:bg-gray-50 transition group">
-        <div class="flex items-center gap-4">
-          <div class="w-10 h-10 bg-violet-100 rounded-lg flex items-center justify-center">
-            <svg class="w-5 h-5 text-violet-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 10V3L4 14h7v7l9-11h-7z"/>
-            </svg>
-          </div>
-          <div>
-            <p class="text-sm font-semibold text-gray-900">AI Settings</p>
-            <p class="text-xs text-gray-500">Configure AI provider for auto-generating descriptions, SEO, and more</p>
-          </div>
-        </div>
-        <svg class="w-5 h-5 text-gray-400 group-hover:text-gray-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7"/>
-        </svg>
-      </a>
 
       <!-- Danger Zone -->
       <div *ngIf="!loading" class="mt-6 bg-white rounded-xl border border-red-200 p-6">

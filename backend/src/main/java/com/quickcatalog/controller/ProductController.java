@@ -5,6 +5,7 @@ import com.quickcatalog.dto.common.ApiResponse;
 import com.quickcatalog.dto.common.PagedResponse;
 import com.quickcatalog.dto.product.*;
 import com.quickcatalog.service.BarcodeService;
+import com.quickcatalog.service.DuplicateDetectionService;
 import com.quickcatalog.service.ProductService;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
@@ -25,6 +26,7 @@ public class ProductController {
 
     private final ProductService productService;
     private final BarcodeService barcodeService;
+    private final DuplicateDetectionService duplicateDetectionService;
 
     @GetMapping
     @ResponseStatus(HttpStatus.OK)
@@ -133,14 +135,37 @@ public class ProductController {
     }
 
     @GetMapping("/export")
-    public ResponseEntity<byte[]> exportCsv() {
-        byte[] csvBytes = productService.exportCsv();
+    public ResponseEntity<byte[]> export(@RequestParam(defaultValue = "csv") String format) {
+        if ("excel".equalsIgnoreCase(format) || "xlsx".equalsIgnoreCase(format)) {
+            byte[] excelBytes = productService.exportExcel();
+            HttpHeaders headers = new HttpHeaders();
+            headers.setContentType(MediaType.parseMediaType(
+                    "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet"));
+            headers.setContentDispositionFormData("attachment", "products.xlsx");
+            headers.setContentLength(excelBytes.length);
+            return new ResponseEntity<>(excelBytes, headers, HttpStatus.OK);
+        }
 
+        byte[] csvBytes = productService.exportCsv();
         HttpHeaders headers = new HttpHeaders();
         headers.setContentType(MediaType.parseMediaType("text/csv"));
         headers.setContentDispositionFormData("attachment", "products.csv");
         headers.setContentLength(csvBytes.length);
-
         return new ResponseEntity<>(csvBytes, headers, HttpStatus.OK);
+    }
+
+    @GetMapping("/{id}/duplicates")
+    @ResponseStatus(HttpStatus.OK)
+    public ApiResponse<DuplicateGroupResponse> findDuplicates(@PathVariable UUID id) {
+        DuplicateGroupResponse response = duplicateDetectionService.findDuplicates(id);
+        return ApiResponse.success(response);
+    }
+
+    @GetMapping("/duplicates/scan")
+    @ResponseStatus(HttpStatus.OK)
+    @PreAuthorize("hasAnyRole('OWNER','ADMIN')")
+    public ApiResponse<List<DuplicateGroupResponse>> scanDuplicates() {
+        List<DuplicateGroupResponse> response = duplicateDetectionService.scanForDuplicates();
+        return ApiResponse.success(response);
     }
 }

@@ -5,5 +5,6 @@ public enum OndcOrderState {
     ACCEPTED,
     IN_PROGRESS,
     COMPLETED,
-    CANCELLED
+    CANCELLED,
+    RETURNED
 }

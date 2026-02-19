@@ -132,17 +132,35 @@ import { IndianCurrencyPipe } from '../../../shared/pipes/indian-currency.pipe';
               <option value="sellingPrice,desc">Price: High to Low</option>
             </select>
 
-            <!-- Export -->
-            <button
-              (click)="exportProducts()"
-              [disabled]="exporting"
-              class="inline-flex items-center gap-1.5 rounded-lg border border-gray-300 bg-white px-3 py-2 text-sm font-medium text-gray-700 shadow-sm hover:bg-gray-50 disabled:opacity-50"
-            >
+            <!-- Export Dropdown -->
+            <div class="relative">
+              <button
+                (click)="showExportMenu = !showExportMenu"
+                [disabled]="exporting"
+                class="inline-flex items-center gap-1.5 rounded-lg border border-gray-300 bg-white px-3 py-2 text-sm font-medium text-gray-700 shadow-sm hover:bg-gray-50 disabled:opacity-50"
+              >
+                <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 10v6m0 0l-3-3m3 3l3-3m2 8H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"/>
+                </svg>
+                {{ exporting ? 'Exporting...' : 'Export' }}
+                <svg class="w-3 h-3 ml-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"/>
+                </svg>
+              </button>
+              <div *ngIf="showExportMenu" class="absolute right-0 mt-1 w-40 bg-white rounded-lg border border-gray-200 shadow-lg z-10">
+                <button (click)="exportAs('csv')" class="w-full text-left px-4 py-2 text-sm text-gray-700 hover:bg-gray-50 rounded-t-lg">Export CSV</button>
+                <button (click)="exportAs('excel')" class="w-full text-left px-4 py-2 text-sm text-gray-700 hover:bg-gray-50 rounded-b-lg">Export Excel</button>
+              </div>
+            </div>
+
+            <!-- Scan Duplicates -->
+            <a routerLink="/products/duplicates"
+               class="inline-flex items-center gap-1.5 rounded-lg border border-gray-300 bg-white px-3 py-2 text-sm font-medium text-gray-700 shadow-sm hover:bg-gray-50">
               <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 10v6m0 0l-3-3m3 3l3-3m2 8H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"/>
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"/>
               </svg>
-              Export
-            </button>
+              Duplicates
+            </a>
           </div>
         </div>
       </div>
@@ -459,14 +477,18 @@ export class ProductListComponent implements OnInit, OnDestroy {
     });
   }
 
-  exportProducts(): void {
+  showExportMenu = false;
+
+  exportAs(format: 'csv' | 'excel'): void {
+    this.showExportMenu = false;
     this.exporting = true;
-    this.productService.exportProducts().subscribe({
+    const ext = format === 'excel' ? 'xlsx' : 'csv';
+    this.productService.exportProducts(format).subscribe({
       next: (blob) => {
         const url = window.URL.createObjectURL(blob);
         const a = document.createElement('a');
         a.href = url;
-        a.download = 'products-export.xlsx';
+        a.download = `products-export.${ext}`;
         a.click();
         window.URL.revokeObjectURL(url);
         this.exporting = false;

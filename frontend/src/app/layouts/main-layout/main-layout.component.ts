@@ -64,6 +64,11 @@ import { AuthService } from '../../core/services/auth.service';
             <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M20 7l-8-4-8 4m16 0l-8 4m8-4v10l-8 4m0-10L4 7m8 4v10M4 7v10l8 4"/></svg>
             Products
           </a>
+          <a routerLink="/import" routerLinkActive="bg-slate-700 text-white" (click)="closeSidebar()"
+             class="flex items-center gap-3 px-3 py-2.5 rounded-lg text-slate-300 hover:bg-slate-700 hover:text-white transition">
+            <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M7 16a4 4 0 01-.88-7.903A5 5 0 1115.9 6L16 6a5 5 0 011 9.9M15 13l-3-3m0 0l-3 3m3-3v12"/></svg>
+            Import
+          </a>
           <a routerLink="/categories" routerLinkActive="bg-slate-700 text-white" (click)="closeSidebar()"
              class="flex items-center gap-3 px-3 py-2.5 rounded-lg text-slate-300 hover:bg-slate-700 hover:text-white transition">
             <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 7v10a2 2 0 002 2h14a2 2 0 002-2V9a2 2 0 00-2-2h-6l-2-2H5a2 2 0 00-2 2z"/></svg>
@@ -73,6 +78,11 @@ import { AuthService } from '../../core/services/auth.service';
              class="flex items-center gap-3 px-3 py-2.5 rounded-lg text-slate-300 hover:bg-slate-700 hover:text-white transition">
             <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 10V3L4 14h7v7l9-11h-7z"/></svg>
             Channels
+          </a>
+          <a routerLink="/ondc" routerLinkActive="bg-slate-700 text-white" (click)="closeSidebar()"
+             class="flex items-center gap-3 px-3 py-2.5 rounded-lg text-slate-300 hover:bg-slate-700 hover:text-white transition">
+            <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 12a9 9 0 01-9 9m9-9a9 9 0 00-9-9m9 9H3m9 9a9 9 0 01-9-9m9 9c1.657 0 3-4.03 3-9s-1.343-9-3-9m0 18c-1.657 0-3-4.03-3-9s1.343-9 3-9m-9 9a9 9 0 019-9"/></svg>
+            ONDC
           </a>
           <a routerLink="/settings" routerLinkActive="bg-slate-700 text-white" (click)="closeSidebar()"
              class="flex items-center gap-3 px-3 py-2.5 rounded-lg text-slate-300 hover:bg-slate-700 hover:text-white transition">
@@ -84,13 +94,15 @@ import { AuthService } from '../../core/services/auth.service';
         <div class="p-4 border-t border-slate-700">
           @if (user(); as u) {
             <div class="flex items-center gap-3">
-              <div class="w-8 h-8 bg-emerald-600 rounded-full flex items-center justify-center text-sm font-medium">
-                {{ u.name.charAt(0) }}
-              </div>
-              <div class="flex-1 min-w-0">
-                <p class="text-sm font-medium truncate">{{ u.name }}</p>
-                <p class="text-xs text-slate-400 truncate">{{ u.companyName }}</p>
-              </div>
+              <a routerLink="/profile" (click)="closeSidebar()" class="flex items-center gap-3 flex-1 min-w-0 hover:opacity-80 transition-opacity">
+                <div class="w-8 h-8 bg-emerald-600 rounded-full flex items-center justify-center text-sm font-medium flex-shrink-0">
+                  {{ u.name.charAt(0) }}
+                </div>
+                <div class="flex-1 min-w-0">
+                  <p class="text-sm font-medium truncate">{{ u.name }}</p>
+                  <p class="text-xs text-slate-400 truncate">{{ u.companyName }}</p>
+                </div>
+              </a>
               <button (click)="logout()" class="text-slate-400 hover:text-white" title="Logout">
                 <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 16l4-4m0 0l-4-4m4 4H7m6 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h4a3 3 0 013 3v1"/></svg>
               </button>

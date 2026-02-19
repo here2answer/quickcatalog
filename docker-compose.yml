@@ -14,6 +14,7 @@ services:
       - ./db/init.sql:/docker-entrypoint-initdb.d/01-init.sql
       - ./db/ondc_migration.sql:/docker-entrypoint-initdb.d/02-ondc-migration.sql
       - ./db/channel_migration.sql:/docker-entrypoint-initdb.d/03-channel-migration.sql
+      - ./db/phase4_migration.sql:/docker-entrypoint-initdb.d/04-phase4-migration.sql
     healthcheck:
       test: ["CMD-SHELL", "pg_isready -U quickcatalog"]
       interval: 5s

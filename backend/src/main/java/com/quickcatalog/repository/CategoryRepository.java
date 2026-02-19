@@ -15,4 +15,6 @@ public interface CategoryRepository extends JpaRepository<Category, UUID> {
     Optional<Category> findByIdAndTenantId(UUID id, UUID tenantId);
 
     long countByTenantIdAndIsActiveTrue(UUID tenantId);
+
+    Optional<Category> findByTenantIdAndName(UUID tenantId, String name);
 }

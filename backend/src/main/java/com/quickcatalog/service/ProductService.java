@@ -29,7 +29,14 @@ import org.springframework.data.domain.Sort;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import org.apache.poi.ss.usermodel.CellStyle;
+import org.apache.poi.ss.usermodel.Font;
+import org.apache.poi.ss.usermodel.Row;
+import org.apache.poi.xssf.usermodel.XSSFSheet;
+import org.apache.poi.xssf.usermodel.XSSFWorkbook;
+
 import java.io.ByteArrayOutputStream;
+import java.io.IOException;
 import java.io.PrintWriter;
 import java.nio.charset.StandardCharsets;
 import java.util.Collections;
@@ -454,6 +461,69 @@ public class ProductService {
 
         writer.flush();
         return baos.toByteArray();
+    }
+
+    public byte[] exportExcel() {
+        UUID tenantId = TenantContext.getTenantId();
+        List<Product> products = productRepository
+                .findByTenantIdAndStatusNot(tenantId, ProductStatus.ARCHIVED, Pageable.unpaged())
+                .getContent();
+
+        try (XSSFWorkbook workbook = new XSSFWorkbook()) {
+            XSSFSheet sheet = workbook.createSheet("Products");
+
+            CellStyle headerStyle = workbook.createCellStyle();
+            Font headerFont = workbook.createFont();
+            headerFont.setBold(true);
+            headerStyle.setFont(headerFont);
+
+            String[] headers = {"Name", "SKU", "Category", "Brand", "MRP", "Selling Price",
+                    "Cost Price", "GST Rate", "HSN Code", "Unit", "Stock",
+                    "Low Stock Threshold", "Status", "Tags", "Barcode"};
+
+            Row headerRow = sheet.createRow(0);
+            for (int i = 0; i < headers.length; i++) {
+                var cell = headerRow.createCell(i);
+                cell.setCellValue(headers[i]);
+                cell.setCellStyle(headerStyle);
+            }
+
+            int rowNum = 1;
+            for (Product product : products) {
+                String categoryName = "";
+                if (product.getCategoryId() != null) {
+                    categoryName = categoryRepository.findById(product.getCategoryId())
+                            .map(Category::getName).orElse("");
+                }
+
+                Row row = sheet.createRow(rowNum++);
+                row.createCell(0).setCellValue(product.getName() != null ? product.getName() : "");
+                row.createCell(1).setCellValue(product.getSku() != null ? product.getSku() : "");
+                row.createCell(2).setCellValue(categoryName);
+                row.createCell(3).setCellValue(product.getBrand() != null ? product.getBrand() : "");
+                row.createCell(4).setCellValue(product.getMrp() != null ? product.getMrp().doubleValue() : 0);
+                row.createCell(5).setCellValue(product.getSellingPrice() != null ? product.getSellingPrice().doubleValue() : 0);
+                row.createCell(6).setCellValue(product.getCostPrice() != null ? product.getCostPrice().doubleValue() : 0);
+                row.createCell(7).setCellValue(product.getGstRate() != null ? product.getGstRate().name() : "");
+                row.createCell(8).setCellValue(product.getHsnCode() != null ? product.getHsnCode() : "");
+                row.createCell(9).setCellValue(product.getUnit() != null ? product.getUnit().name() : "");
+                row.createCell(10).setCellValue(product.getCurrentStock() != null ? product.getCurrentStock().doubleValue() : 0);
+                row.createCell(11).setCellValue(product.getLowStockThreshold() != null ? product.getLowStockThreshold() : 0);
+                row.createCell(12).setCellValue(product.getStatus() != null ? product.getStatus().name() : "");
+                row.createCell(13).setCellValue(product.getTags() != null ? String.join("|", product.getTags()) : "");
+                row.createCell(14).setCellValue(product.getBarcodeValue() != null ? product.getBarcodeValue() : "");
+            }
+
+            for (int i = 0; i < headers.length; i++) {
+                sheet.autoSizeColumn(i);
+            }
+
+            ByteArrayOutputStream baos = new ByteArrayOutputStream();
+            workbook.write(baos);
+            return baos.toByteArray();
+        } catch (IOException e) {
+            throw new RuntimeException("Failed to generate Excel file", e);
+        }
     }
 
     // --- Private helpers ---

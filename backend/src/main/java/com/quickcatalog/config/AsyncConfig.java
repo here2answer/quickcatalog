@@ -30,4 +30,15 @@ public class AsyncConfig {
         executor.initialize();
         return executor;
     }
+
+    @Bean(name = "importExecutor")
+    public Executor importExecutor() {
+        ThreadPoolTaskExecutor executor = new ThreadPoolTaskExecutor();
+        executor.setCorePoolSize(1);
+        executor.setMaxPoolSize(2);
+        executor.setQueueCapacity(5);
+        executor.setThreadNamePrefix("import-");
+        executor.initialize();
+        return executor;
+    }
 }

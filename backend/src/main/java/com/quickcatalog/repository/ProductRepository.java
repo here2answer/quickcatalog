@@ -51,4 +51,49 @@ public interface ProductRepository extends JpaRepository<Product, UUID> {
 
     @Query("SELECT p FROM Product p LEFT JOIN FETCH p.images WHERE p.id = :id AND p.tenantId = :tenantId")
     Optional<Product> findByIdAndTenantIdWithImages(@Param("id") UUID id, @Param("tenantId") UUID tenantId);
+
+    // Duplicate detection - name similarity using pg_trgm
+    @Query(value = """
+            SELECT p.* FROM product p
+            WHERE p.tenant_id = :tenantId
+            AND p.id != :productId
+            AND p.status != 'ARCHIVED'
+            AND similarity(p.name, :name) > :threshold
+            ORDER BY similarity(p.name, :name) DESC
+            LIMIT 20
+            """, nativeQuery = true)
+    List<Product> findSimilarByName(
+            @Param("tenantId") UUID tenantId,
+            @Param("productId") UUID productId,
+            @Param("name") String name,
+            @Param("threshold") double threshold);
+
+    // Duplicate detection - exact SKU match
+    @Query(value = """
+            SELECT p.* FROM product p
+            WHERE p.tenant_id = :tenantId
+            AND p.id != :excludeId
+            AND p.sku = :sku
+            AND p.status != 'ARCHIVED'
+            """, nativeQuery = true)
+    List<Product> findBySameSku(
+            @Param("tenantId") UUID tenantId,
+            @Param("excludeId") UUID excludeId,
+            @Param("sku") String sku);
+
+    // Dashboard catalog health queries
+    @Query(value = "SELECT COUNT(DISTINCT p.id) FROM product p JOIN product_image pi ON p.id = pi.product_id WHERE p.tenant_id = :tenantId AND p.status != 'ARCHIVED'", nativeQuery = true)
+    long countProductsWithImages(@Param("tenantId") UUID tenantId);
+
+    @Query(value = "SELECT COUNT(*) FROM product WHERE tenant_id = :tenantId AND status != 'ARCHIVED' AND short_description IS NOT NULL AND short_description != ''", nativeQuery = true)
+    long countProductsWithDescriptions(@Param("tenantId") UUID tenantId);
+
+    @Query(value = "SELECT COUNT(*) FROM product WHERE tenant_id = :tenantId AND status != 'ARCHIVED' AND seo_title IS NOT NULL AND seo_title != ''", nativeQuery = true)
+    long countProductsWithSeo(@Param("tenantId") UUID tenantId);
+
+    @Query(value = "SELECT COUNT(*) FROM product WHERE tenant_id = :tenantId AND status != 'ARCHIVED' AND barcode_value IS NOT NULL AND barcode_value != ''", nativeQuery = true)
+    long countProductsWithBarcode(@Param("tenantId") UUID tenantId);
+
+    @Query(value = "SELECT COUNT(*) FROM product WHERE tenant_id = :tenantId AND status != 'ARCHIVED' AND hsn_code IS NOT NULL AND hsn_code != ''", nativeQuery = true)
+    long countProductsWithHsn(@Param("tenantId") UUID tenantId);
 }

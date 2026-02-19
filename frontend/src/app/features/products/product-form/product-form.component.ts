@@ -42,6 +42,7 @@ import { ConfirmDialogComponent } from '../../../shared/components/confirm-dialo
 import { AiGenerateButtonComponent } from '../../../shared/components/ai-generate-button/ai-generate-button.component';
 import { VariantManagerComponent } from '../variant-manager/variant-manager.component';
 import { IndianCurrencyPipe } from '../../../shared/pipes/indian-currency.pipe';
+import { QuillModule } from 'ngx-quill';
 
 @Component({
   selector: 'app-product-form',
@@ -65,6 +66,7 @@ import { IndianCurrencyPipe } from '../../../shared/pipes/indian-currency.pipe';
     AiGenerateButtonComponent,
     VariantManagerComponent,
     IndianCurrencyPipe,
+    QuillModule,
   ],
   template: `
     <div class="p-6 lg:p-8 max-w-7xl mx-auto pb-24">
@@ -296,12 +298,13 @@ import { IndianCurrencyPipe } from '../../../shared/pipes/indian-currency.pipe';
 
             <div>
               <label class="block text-sm font-medium text-gray-700 mb-1">Long Description</label>
-              <textarea
+              <quill-editor
                 formControlName="longDescription"
-                rows="6"
-                class="block w-full rounded-lg border border-gray-300 px-3 py-2.5 text-sm shadow-sm placeholder:text-gray-400 focus:border-emerald-500 focus:outline-none focus:ring-1 focus:ring-emerald-500 resize-y"
                 placeholder="Detailed product description..."
-              ></textarea>
+                [styles]="{ height: '180px' }"
+                [modules]="quillModules"
+                class="block"
+              ></quill-editor>
             </div>
           </section>
 
@@ -676,6 +679,54 @@ import { IndianCurrencyPipe } from '../../../shared/pipes/indian-currency.pipe';
               </button>
             </div>
           </section>
+
+          <!-- Barcode (edit mode only) -->
+          <section *ngIf="isEditMode" class="bg-white rounded-xl border border-gray-200 p-6">
+            <h2 class="text-base font-semibold text-gray-900 mb-4">Barcode</h2>
+
+            <div class="space-y-3">
+              <div>
+                <label class="block text-sm font-medium text-gray-700 mb-1">Type</label>
+                <select formControlName="barcodeType"
+                  class="block w-full rounded-lg border border-gray-300 px-3 py-2.5 text-sm shadow-sm focus:border-emerald-500 focus:outline-none focus:ring-1 focus:ring-emerald-500">
+                  <option value="EAN_13">EAN-13</option>
+                </select>
+              </div>
+
+              <div>
+                <label class="block text-sm font-medium text-gray-700 mb-1">Value</label>
+                <div class="flex gap-2">
+                  <input
+                    formControlName="barcodeValue"
+                    type="text"
+                    class="block flex-1 rounded-lg border border-gray-300 px-3 py-2.5 text-sm shadow-sm font-mono placeholder:text-gray-400 focus:border-emerald-500 focus:outline-none focus:ring-1 focus:ring-emerald-500"
+                    placeholder="e.g. 8901234567890"
+                    readonly
+                  />
+                  <button
+                    type="button"
+                    (click)="generateBarcode()"
+                    [disabled]="barcodeGenerating"
+                    class="inline-flex items-center gap-1.5 whitespace-nowrap rounded-lg bg-gray-800 px-3 py-2.5 text-sm font-medium text-white hover:bg-gray-700 disabled:opacity-50 transition-colors"
+                  >
+                    <svg *ngIf="!barcodeGenerating" class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15"/>
+                    </svg>
+                    <svg *ngIf="barcodeGenerating" class="animate-spin w-4 h-4" fill="none" viewBox="0 0 24 24">
+                      <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
+                      <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+                    </svg>
+                    {{ barcodeGenerating ? 'Generating...' : 'Generate' }}
+                  </button>
+                </div>
+              </div>
+
+              <div *ngIf="barcodeImageUrl" class="pt-2 border-t border-gray-100">
+                <p class="text-xs text-gray-500 mb-2">Preview</p>
+                <img [src]="barcodeImageUrl" alt="Barcode" class="h-16 object-contain" />
+              </div>
+            </div>
+          </section>
         </div>
       </form>
 
@@ -775,8 +826,22 @@ export class ProductFormComponent implements OnInit, OnDestroy {
   seoOpen = false;
   variantsOpen = false;
 
+  // Barcode
+  barcodeGenerating = false;
+  barcodeImageUrl: string | null = null;
+
   // Delete confirmation
   showDeleteConfirm = false;
+
+  // Quill editor config
+  quillModules = {
+    toolbar: [
+      ['bold', 'italic', 'underline'],
+      [{ list: 'ordered' }, { list: 'bullet' }],
+      [{ header: [3, 4, false] }],
+      ['clean'],
+    ],
+  };
 
   // AI generation state
   aiDescLoading = false;
@@ -1141,6 +1206,8 @@ export class ProductFormComponent implements OnInit, OnDestroy {
       seoDescription: [''],
       seoKeywords: [[]],
       slug: [''],
+      barcodeType: ['EAN_13'],
+      barcodeValue: [''],
       status: ['DRAFT'],
       featured: [false],
     });
@@ -1215,9 +1282,17 @@ export class ProductFormComponent implements OnInit, OnDestroy {
       seoDescription: product.seoDescription || '',
       seoKeywords: product.seoKeywords || [],
       slug: product.slug || '',
+      barcodeType: product.barcodeType || 'EAN_13',
+      barcodeValue: product.barcodeValue || '',
       status: product.status,
       featured: product.featured,
     });
+
+    // Load barcode image if value exists
+    if (product.barcodeValue) {
+      this.barcodeImageUrl = null;
+      this.loadBarcodeImage(product.barcodeValue);
+    }
 
     // Open inventory section if tracking
     if (product.trackInventory) {
@@ -1252,6 +1327,8 @@ export class ProductFormComponent implements OnInit, OnDestroy {
       seoDescription: formVal.seoDescription || null,
       seoKeywords: formVal.seoKeywords,
       slug: formVal.slug || null,
+      barcodeType: formVal.barcodeType || null,
+      barcodeValue: formVal.barcodeValue || null,
       status: status,
       featured: formVal.featured,
       customAttributes:
@@ -1259,6 +1336,36 @@ export class ProductFormComponent implements OnInit, OnDestroy {
           ? JSON.stringify(this.dynamicAttrValues)
           : null,
     };
+  }
+
+  generateBarcode(): void {
+    if (!this.productId) {
+      this.toast.error('Save the product first before generating a barcode');
+      return;
+    }
+    this.barcodeGenerating = true;
+    this.productService.generateBarcode(this.productId).subscribe({
+      next: (res) => {
+        const result = res.data;
+        this.form.patchValue({ barcodeValue: result.barcodeValue, barcodeType: 'EAN_13' });
+        this.form.markAsDirty();
+        this.barcodeImageUrl = 'data:image/png;base64,' + result.barcodeImageBase64;
+        this.barcodeGenerating = false;
+        this.toast.success('Barcode generated');
+      },
+      error: () => {
+        this.barcodeGenerating = false;
+        this.toast.error('Failed to generate barcode');
+      },
+    });
+  }
+
+  private loadBarcodeImage(value: string): void {
+    this.productService.getBarcodeImage(this.productId, value).subscribe({
+      next: (blob) => {
+        this.barcodeImageUrl = URL.createObjectURL(blob);
+      },
+    });
   }
 
   private loadLookupData(): void {
