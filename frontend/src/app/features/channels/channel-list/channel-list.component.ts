@@ -53,7 +53,13 @@ import { LoadingSkeletonComponent } from '../../../shared/components/loading-ske
                 {{ getChannelIcon(channel.channelType) }}
               </div>
               <div>
-                <h3 class="text-sm font-semibold text-gray-900">{{ channel.channelName }}</h3>
+                <div class="flex items-center gap-1.5">
+                  <h3 class="text-sm font-semibold text-gray-900">{{ channel.channelName }}</h3>
+                  <span *ngIf="isComingSoon(channel.channelType)"
+                        class="inline-flex items-center px-1.5 py-0.5 rounded text-[10px] font-semibold bg-amber-100 text-amber-700 border border-amber-200">
+                    Coming Soon
+                  </span>
+                </div>
                 <p class="text-xs text-gray-500">{{ channel.channelType }}</p>
               </div>
             </div>
@@ -182,5 +188,11 @@ export class ChannelListComponent implements OnInit {
       'CUSTOM': 'CU',
     };
     return icons[type] || type.substring(0, 2);
+  }
+
+  private readonly COMING_SOON_TYPES = new Set(['AMAZON', 'FLIPKART', 'MEESHO', 'JIOMART']);
+
+  isComingSoon(type: ChannelType): boolean {
+    return this.COMING_SOON_TYPES.has(type);
   }
 }

@@ -28,15 +28,23 @@ import { IndianCurrencyPipe } from '../../../shared/pipes/indian-currency.pipe';
         <p class="text-sm font-medium text-gray-700 mb-2">Select channel to publish to:</p>
         <div class="flex flex-wrap gap-2 mb-3">
           <button *ngFor="let ch of availableChannels"
-                  (click)="selectedChannel = ch"
-                  class="px-3 py-1.5 rounded-lg text-xs font-medium border transition"
+                  (click)="isComingSoon(ch) ? null : selectedChannel = ch"
+                  [disabled]="isComingSoon(ch)"
+                  class="px-3 py-1.5 rounded-lg text-xs font-medium border transition relative"
                   [class.bg-emerald-600]="selectedChannel?.id === ch.id"
                   [class.text-white]="selectedChannel?.id === ch.id"
                   [class.border-emerald-600]="selectedChannel?.id === ch.id"
                   [class.border-gray-200]="selectedChannel?.id !== ch.id"
                   [class.text-gray-700]="selectedChannel?.id !== ch.id"
-                  [class.hover:bg-gray-50]="selectedChannel?.id !== ch.id">
+                  [class.hover:bg-gray-50]="selectedChannel?.id !== ch.id && !isComingSoon(ch)"
+                  [class.opacity-60]="isComingSoon(ch)"
+                  [class.cursor-not-allowed]="isComingSoon(ch)"
+                  [title]="isComingSoon(ch) ? ch.channelType + ' integration is not yet available' : ''">
             {{ ch.channelName }}
+            <span *ngIf="isComingSoon(ch)"
+                  class="ml-1.5 inline-flex items-center px-1.5 py-0.5 rounded text-[10px] font-semibold bg-amber-100 text-amber-700 border border-amber-200">
+              Coming Soon
+            </span>
           </button>
         </div>
         <div *ngIf="selectedChannel" class="flex items-center gap-3">
@@ -205,5 +213,11 @@ export class ProductChannelsComponent implements OnInit {
       },
       error: () => this.toast.error('Sync failed'),
     });
+  }
+
+  private readonly COMING_SOON_TYPES = new Set(['AMAZON', 'FLIPKART', 'MEESHO', 'JIOMART']);
+
+  isComingSoon(channel: Channel): boolean {
+    return this.COMING_SOON_TYPES.has(channel.channelType);
   }
 }

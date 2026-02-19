@@ -74,7 +74,7 @@ public class UserManagementService {
         log.info("Invited user {} with role {} (temp password generated)", request.getEmail(), role);
 
         UserDTO dto = mapToDTO(user);
-        // In a real system you'd send an email with the temp password
+        dto.setTempPassword(tempPassword);
         return dto;
     }
 

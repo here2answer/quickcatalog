@@ -306,6 +306,7 @@ export interface UserInfo {
   active: boolean;
   lastLoginAt?: string;
   createdAt: string;
+  tempPassword?: string;
 }
 
 export interface InviteUserRequest {

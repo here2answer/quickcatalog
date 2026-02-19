@@ -135,6 +135,37 @@ import { RelativeTimePipe } from '../../../shared/pipes/relative-time.pipe';
           </div>
         </div>
       </div>
+
+      <!-- Temp Password Dialog -->
+      <div *ngIf="showTempPassword" class="fixed inset-0 z-50 flex items-center justify-center bg-black bg-opacity-50">
+        <div class="bg-white rounded-xl shadow-xl w-full max-w-md p-6">
+          <div class="flex items-center gap-3 mb-4">
+            <div class="w-10 h-10 bg-green-100 rounded-full flex items-center justify-center">
+              <svg class="w-5 h-5 text-green-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"/>
+              </svg>
+            </div>
+            <h3 class="text-lg font-semibold text-gray-900">User Invited Successfully</h3>
+          </div>
+          <p class="text-sm text-gray-600 mb-3">Share this temporary password with the new user. They should change it after first login.</p>
+          <div class="flex items-center gap-2 p-3 bg-gray-50 rounded-lg border border-gray-200">
+            <code class="flex-1 text-sm font-mono font-semibold text-gray-900 select-all">{{ tempPassword }}</code>
+            <button (click)="copyTempPassword()"
+                    class="flex-shrink-0 inline-flex items-center gap-1 px-3 py-1.5 text-xs font-medium rounded-md bg-emerald-600 text-white hover:bg-emerald-500 transition-colors">
+              <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 16H6a2 2 0 01-2-2V6a2 2 0 012-2h8a2 2 0 012 2v2m-6 12h8a2 2 0 002-2v-8a2 2 0 00-2-2h-8a2 2 0 00-2 2v8a2 2 0 002 2z"/>
+              </svg>
+              {{ copiedPassword ? 'Copied!' : 'Copy' }}
+            </button>
+          </div>
+          <div class="flex justify-end mt-5">
+            <button (click)="showTempPassword = false; tempPassword = ''"
+                    class="px-4 py-2 text-sm font-medium text-white bg-emerald-600 rounded-lg hover:bg-emerald-500">
+              Done
+            </button>
+          </div>
+        </div>
+      </div>
     </div>
   `,
 })
@@ -147,6 +178,9 @@ export class UserListComponent implements OnInit {
   inviteName = '';
   inviteEmail = '';
   inviteRole = 'EDITOR';
+  showTempPassword = false;
+  tempPassword = '';
+  copiedPassword = false;
 
   ngOnInit(): void {
     this.loadUsers();
@@ -184,13 +218,26 @@ export class UserListComponent implements OnInit {
       email: this.inviteEmail,
       role: this.inviteRole,
     }).subscribe({
-      next: () => {
+      next: (res) => {
         this.showInvite = false;
         this.inviteName = '';
         this.inviteEmail = '';
         this.inviteRole = 'EDITOR';
         this.loadUsers();
+
+        if (res.data?.tempPassword) {
+          this.tempPassword = res.data.tempPassword;
+          this.showTempPassword = true;
+          this.copiedPassword = false;
+        }
       },
+    });
+  }
+
+  copyTempPassword(): void {
+    navigator.clipboard.writeText(this.tempPassword).then(() => {
+      this.copiedPassword = true;
+      setTimeout(() => this.copiedPassword = false, 2000);
     });
   }
 }
